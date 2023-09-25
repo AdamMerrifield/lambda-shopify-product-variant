@@ -2,7 +2,15 @@ import '@shopify/shopify-api/adapters/node'
 import type { ConfigParams } from '@shopify/shopify-api'
 import { shopifyApi } from '@shopify/shopify-api'
 import { restResources } from '@shopify/shopify-api/rest/admin/2023-07'
-import type { APIGatewayEvent, Context } from 'aws-lambda'
+import type { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
+import type { Product } from '@shopify/shopify-api/rest/admin/2023-07/product'
+import type { FindAllResponse } from '@shopify/shopify-api/rest/base'
+import type { Metafield } from '@shopify/shopify-api/rest/admin/2023-07/metafield'
+
+interface ProductWithMeta {
+  product: Product
+  meta: Metafield[]
+}
 
 // setup shopify api
 const shopify = shopifyApi({
@@ -17,15 +25,20 @@ const shopify = shopifyApi({
 } as ConfigParams)
 const session = shopify.session.customAppSession('adamdev.myshopify.com')
 // handle all requests
-export async function handler(event: APIGatewayEvent, _context: Context) {
-  console.log(event.multiValueQueryStringParameters, event.resource)
+export async function handler(event: APIGatewayEvent, _context: Context): Promise<APIGatewayProxyResult> {
+  // console.log(event.multiValueQueryStringParameters, event.resource)
 
   if (event.resource === '/create') {
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify(await createVariant(event.multiValueQueryStringParameters?.productid?.shift())),
+    }
 
+    return response
   }
-  else if (event.resource === '/update') {
+  // else if (event.resource === '/update') {
 
-  }
+  // }
   else if (event.resource === '/get-all-products') {
     const response = {
       statusCode: 200,
@@ -34,17 +47,49 @@ export async function handler(event: APIGatewayEvent, _context: Context) {
 
     return response
   }
-
+  // all else fail
   const response = {
     statusCode: 400,
+    body: '',
   }
+
   return response
 }
-
-async function getAllProducts() {
-  const products = await shopify.rest.Product.all({
+// get all products in this store
+async function getAllProducts(): Promise<Product[]> {
+  const products: FindAllResponse<Product> = await shopify.rest.Product.all({
     session,
   })
 
-  return products
+  return products.data
+}
+// create a new product variant
+async function createVariant(id?: string) {
+  const { product, meta } = await getProduct(id)
+
+  if (product.variants?.length >= 100)
+    console.error(`productid ${id} has max variants`)
+
+  console.log({ product, meta })
+
+  return product
+}
+// get product and product meta data
+async function getProduct(id?: string): Promise<ProductWithMeta> {
+  const productPromise: Promise<Product> = shopify.rest.Product.find({
+    session,
+    id,
+  })
+
+  const metaPromise: Promise<FindAllResponse<Metafield>> = shopify.rest.Metafield.all({
+    session,
+    metafield: { owner_id: id, owner_resource: 'product' },
+  })
+
+  await Promise.all([productPromise, metaPromise])
+
+  const product = await productPromise
+  const meta = await metaPromise
+
+  return { product, meta: meta.data }
 }
