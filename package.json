@@ -18,6 +18,9 @@
     "@types/aws-lambda": "^8.10.122"
   },
   "devDependencies": {
-    "esbuild": "^0.19.3"
+    "@antfu/eslint-config": "^1.0.0-beta.10",
+    "esbuild": "^0.19.3",
+    "eslint": "^8.50.0",
+    "typescript": "^5.2.2"
   }
 }
