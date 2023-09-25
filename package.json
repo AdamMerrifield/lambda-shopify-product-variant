@@ -12,7 +12,8 @@
     "package": "rm -rf dist/index.zip && zip -rj dist/index.zip ./dist/*",
     "deploy": "aws lambda update-function-code --function-name shopify-product-variant --zip-file fileb://dist/index.zip",
     "lint": "eslint .",
-    "lint-fix": "eslint . --fix"
+    "lint-fix": "eslint . --fix",
+    "test": "ts-node --experimental-specifier-resolution=node --esm index.test.ts"
   },
   "dependencies": {
     "@shopify/shopify-api": "^7.7.0",
@@ -20,8 +21,10 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^1.0.0-beta.10",
+    "@types/node": "^20.6.5",
     "esbuild": "^0.19.3",
     "eslint": "^8.50.0",
+    "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   }
 }
