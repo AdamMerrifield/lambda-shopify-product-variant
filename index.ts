@@ -1,11 +1,11 @@
 import '@shopify/shopify-api/adapters/node'
 import type { ConfigParams } from '@shopify/shopify-api'
 import { shopifyApi } from '@shopify/shopify-api'
-import { restResources } from '@shopify/shopify-api/rest/admin/2023-07'
-import type { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
-import type { Product } from '@shopify/shopify-api/rest/admin/2023-07/product'
 import type { FindAllResponse } from '@shopify/shopify-api/rest/base'
+import { restResources } from '@shopify/shopify-api/rest/admin/2023-07'
+import type { Product } from '@shopify/shopify-api/rest/admin/2023-07/product'
 import type { Metafield } from '@shopify/shopify-api/rest/admin/2023-07/metafield'
+import type { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
 
 interface ProductWithMeta {
   product: Product
