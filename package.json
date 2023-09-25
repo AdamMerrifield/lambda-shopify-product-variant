@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.mjs",
+  "type": "module",
   "scripts": {
+    "build": "rm -rf dist && esbuild ./index.mjs --bundle --minify --sourcemap --platform=node --target=node18 --outdir=dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
