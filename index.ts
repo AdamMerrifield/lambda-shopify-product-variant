@@ -1,7 +1,8 @@
-import '@shopify/shopify-api/adapters/node';
-import {ConfigParams, shopifyApi} from '@shopify/shopify-api';
-import { restResources } from "@shopify/shopify-api/rest/admin/2023-07";
-import { Context, APIGatewayEvent } from 'aws-lambda';
+import '@shopify/shopify-api/adapters/node'
+import type { ConfigParams } from '@shopify/shopify-api'
+import { shopifyApi } from '@shopify/shopify-api'
+import { restResources } from '@shopify/shopify-api/rest/admin/2023-07'
+import type { APIGatewayEvent, Context } from 'aws-lambda'
 
 // setup shopify api
 const shopify = shopifyApi({
@@ -13,36 +14,37 @@ const shopify = shopifyApi({
   isCustomStoreApp: true,
   isEmbeddedApp: false,
   restResources,
-} as ConfigParams);
-const session = shopify.session.customAppSession('adamdev.myshopify.com');
+} as ConfigParams)
+const session = shopify.session.customAppSession('adamdev.myshopify.com')
 // handle all requests
-export const handler = async (event: APIGatewayEvent, context: Context) => {
+export async function handler(event: APIGatewayEvent, _context: Context) {
   console.log(event.multiValueQueryStringParameters, event.resource)
 
   if (event.resource === '/create') {
 
-  } else if (event.resource === '/update') {
+  }
+  else if (event.resource === '/update') {
 
-  } else if (event.resource === '/get-all-products') {
+  }
+  else if (event.resource === '/get-all-products') {
     const response = {
       statusCode: 200,
-      body: JSON.stringify(await getAllProducts())
-    };
+      body: JSON.stringify(await getAllProducts()),
+    }
 
-    return response;
+    return response
   }
 
   const response = {
     statusCode: 400,
-  };
-  return response;
+  }
+  return response
 }
 
-
-const getAllProducts = async () => {
+async function getAllProducts() {
   const products = await shopify.rest.Product.all({
     session,
-  });
+  })
 
   return products
 }
