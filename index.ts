@@ -1,6 +1,8 @@
 import '@shopify/shopify-api/adapters/node';
-import {shopifyApi} from '@shopify/shopify-api';
+import {ConfigParams, shopifyApi} from '@shopify/shopify-api';
 import { restResources } from "@shopify/shopify-api/rest/admin/2023-07";
+import { Context, APIGatewayEvent } from 'aws-lambda';
+
 // setup shopify api
 const shopify = shopifyApi({
   apiKey: 'f86f95131242da0365ba4b818ac4bd47',
@@ -11,10 +13,10 @@ const shopify = shopifyApi({
   isCustomStoreApp: true,
   isEmbeddedApp: false,
   restResources,
-});
+} as ConfigParams);
 const session = shopify.session.customAppSession('adamdev.myshopify.com');
 // handle all requests
-export const handler = async (event, context) => {
+export const handler = async (event: APIGatewayEvent, context: Context) => {
   console.log(event.multiValueQueryStringParameters, event.resource)
 
   if (event.resource === '/create') {
