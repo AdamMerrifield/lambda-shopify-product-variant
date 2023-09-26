@@ -105,6 +105,7 @@ async function createVariant(id: string, quantity: number, properties: CartItemP
   // setup new variant
   const variant = (product.variants as Variant[])[0]
   variant.id = null
+  variant.title = null
   variant.option1 = name
   variant.price = price.toFixed(2)
   await variant.save({
