@@ -25,56 +25,142 @@ const shopify = shopifyApi({
 const session = shopify.session.customAppSession(shopify.config.hostName)
 // handle all requests
 export async function handler(event: APIGatewayEvent, _context: Context): Promise<APIGatewayProxyResult> {
-  // console.log(event.multiValueQueryStringParameters, event.resource)
+  let body: null | any = null
 
-  if (event.resource === '/create') {
-    const response = {
-      statusCode: 200,
-      body: JSON.stringify(await createVariant(event.multiValueQueryStringParameters?.productid?.shift())),
+  try {
+    if (event.resource === '/create') {
+      const id = event.multiValueQueryStringParameters?.productid?.[0] ?? '0'
+      const quantity = Number.parseInt(event.multiValueQueryStringParameters?.quantity?.[0] ?? '1', 10)
+      const properties = event.multiValueQueryStringParameters?.properties ?? []
+      const propertiesParsed = Object.fromEntries(properties.map((p: string) => {
+        const v = p.split('=')
+
+        return [v[0], v[1]]
+      }))
+
+      body = await createVariant(id, quantity, propertiesParsed)
     }
-
-    return response
+    else if (event.resource === '/update') {
+      body = await updateVariant()
+    }
+    else if (event.resource === '/get-all-products') {
+      body = await getAllProducts()
+    }
   }
-  // else if (event.resource === '/update') {
-
-  // }
-  else if (event.resource === '/get-all-products') {
+  catch (err) {
     const response = {
-      statusCode: 200,
-      body: JSON.stringify(await getAllProducts()),
+      statusCode: 400,
+      body: JSON.stringify(err),
     }
 
     return response
   }
   // all else fail
   const response = {
-    statusCode: 400,
-    body: '',
+    statusCode: 200,
+    body: JSON.stringify(body),
   }
 
   return response
 }
 // get all products in this store
 async function getAllProducts(): Promise<Product[]> {
-  const products: FindAllResponse<Product> = await shopify.rest.Product.all({
-    session,
-  })
+  let products: Product[] = []
+  let pageInfo
 
-  return products.data
+  do {
+    const response: FindAllResponse<Product> = await shopify.rest.Product.all({
+      ...pageInfo?.nextPage?.query,
+      session,
+      limit: 250,
+    })
+
+    products = [...products, ...response.data]
+
+    pageInfo = response.pageInfo
+  } while (pageInfo?.nextPage)
+
+  return products
 }
 // create a new product variant
-async function createVariant(id?: string) {
-  const { product, meta } = await getProduct(id)
+async function createVariant(id: string, quantity: number, properties: CartItemProps) {
+  const { product, meta } = await getProductWithMeta(id)
+
+  console.log({ meta })
 
   if (product.variants?.length >= 100)
     console.error(`productid ${id} has max variants`)
 
-  console.log({ product, meta })
+  console.log(calcPrice(product, meta, quantity, properties))
+  // setup new variant
+  const variant = new shopify.rest.Variant({ session })
+  variant.product_id = id
+  variant.option1 = product.title
+  variant.price = calcPrice(product, meta, quantity, properties)
+  // await variant.save({
+  //   update: true,
+  // })
 
-  return product
+  // return product
+  return 'test'
+}
+// update a product variant
+async function updateVariant() {
+
+}
+
+// UTILS
+// get pricing from properties and metafields passed in
+function calcPrice(product: Product, meta: Metafield[], quantity: number, properties: CartItemProps): number {
+  const price = product.variants && 0 in product.variants ? Number.parseFloat((product.variants as Variant[])[0].price ?? '0.0') : 0.0
+  let quantityDiscountCents = 0
+  let additionalOptionsCents = 0
+
+  console.log({ properties, quantity })
+
+  if (price === 0.0)
+    console.error(`Invalid base variant for productid ${product.id}`)
+
+  meta.forEach((metaField) => {
+    const namespace = metaField.namespace?.trim()
+    // setup quantity discounts
+    if (namespace === 'discount' && metaField.key?.trim() === 'key' && typeof metaField.value === 'string') {
+      const quantityDiscounts = metaField.value.split(',')
+      // go through each discount
+      quantityDiscounts.forEach((discounts: string) => {
+        const v = discounts.split(':').map(val => Number.parseInt(val, 10))
+        // if the quantity passed in is greater and the discount is greater, use this discount
+        if (v[0] <= quantity && v[1] >= quantityDiscountCents)
+          quantityDiscountCents = v[1]
+      })
+    }
+    else if (namespace === 'product_customizer' && typeof metaField.value === 'string') {
+      const parsedValue: ProductCustomizerValue = JSON.parse(metaField.value)
+
+      if (parsedValue.name && parsedValue.name in properties) {
+        const property = properties[parsedValue.name]
+
+        if (parsedValue.options && parsedValue.option_prices) {
+          const options = parsedValue.options.split(',')
+          const prices = parsedValue.option_prices.split(',')
+          const index = options.indexOf(property)
+          let optionPrice = 0.0
+
+          if (index in prices)
+            optionPrice = Number.parseInt(prices[index], 10)
+          else
+            optionPrice = Number.parseInt(prices.pop() ?? '0', 10)
+
+          additionalOptionsCents += optionPrice
+        }
+      }
+    }
+  })
+
+  return price + (additionalOptionsCents / 100) - (quantityDiscountCents / 100)
 }
 // get product and product meta data
-async function getProduct(id?: string): Promise<ProductWithMeta> {
+async function getProductWithMeta(id?: string): Promise<ProductWithMeta> {
   const productPromise: Promise<Product> = shopify.rest.Product.find({
     session,
     id,
@@ -83,12 +169,16 @@ async function getProduct(id?: string): Promise<ProductWithMeta> {
   const metaPromise: Promise<FindAllResponse<Metafield>> = shopify.rest.Metafield.all({
     session,
     metafield: { owner_id: id, owner_resource: 'product' },
+    limit: 250,
   })
 
   await Promise.all([productPromise, metaPromise])
 
   const product = await productPromise
   const meta = await metaPromise
+
+  if (product === null)
+    throw new Error('Invalid Product ID')
 
   return { product, meta: meta.data }
 }

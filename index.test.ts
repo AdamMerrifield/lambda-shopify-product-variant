@@ -6,14 +6,16 @@ import { handler } from './index'
 //   resource: '/get-all-products',
 //   multiValueQueryStringParameters: {
 
-//   },
+//   } as APIGatewayProxyEventMultiValueQueryStringParameters,
 // } as APIGatewayEvent
 
 const event = {
   body: null,
   resource: '/create',
   multiValueQueryStringParameters: {
-    productid: ['7199896109090'],
+    productid: ['522626203700'],
+    quantity: ['25'],
+    properties: ['a=b', 'Rounded Corners=Yes'],
   } as APIGatewayProxyEventMultiValueQueryStringParameters,
 } as APIGatewayEvent
 
