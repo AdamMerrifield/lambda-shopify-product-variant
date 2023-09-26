@@ -93,71 +93,15 @@ async function createVariant(id: string, quantity: number, properties: CartItemP
 
   console.log(calcPrice(product, meta, quantity, properties))
   // setup new variant
-  const variant = new shopify.rest.Variant({ session })
-  variant.product_id = id
-  variant.option1 = product.title
-  variant.price = calcPrice(product, meta, quantity, properties)
-  // await variant.save({
-  //   update: true,
-  // })
-
-  // return product
-  return 'test'
-}
-// update a product variant
-async function updateVariant() {
-
-}
-
-// UTILS
-// get pricing from properties and metafields passed in
-function calcPrice(product: Product, meta: Metafield[], quantity: number, properties: CartItemProps): number {
-  const price = product.variants && 0 in product.variants ? Number.parseFloat((product.variants as Variant[])[0].price ?? '0.0') : 0.0
-  let quantityDiscountCents = 0
-  let additionalOptionsCents = 0
-
-  console.log({ properties, quantity })
-
-  if (price === 0.0)
-    console.error(`Invalid base variant for productid ${product.id}`)
-
-  meta.forEach((metaField) => {
-    const namespace = metaField.namespace?.trim()
-    // setup quantity discounts
-    if (namespace === 'discount' && metaField.key?.trim() === 'key' && typeof metaField.value === 'string') {
-      const quantityDiscounts = metaField.value.split(',')
-      // go through each discount
-      quantityDiscounts.forEach((discounts: string) => {
-        const v = discounts.split(':').map(val => Number.parseInt(val, 10))
-        // if the quantity passed in is greater and the discount is greater, use this discount
-        if (v[0] <= quantity && v[1] >= quantityDiscountCents)
-          quantityDiscountCents = v[1]
-      })
-    }
-    else if (namespace === 'product_customizer' && typeof metaField.value === 'string') {
-      const parsedValue: ProductCustomizerValue = JSON.parse(metaField.value)
-
-      if (parsedValue.name && parsedValue.name in properties) {
-        const property = properties[parsedValue.name]
-
-        if (parsedValue.options && parsedValue.option_prices) {
-          const options = parsedValue.options.split(',')
-          const prices = parsedValue.option_prices.split(',')
-          const index = options.indexOf(property)
-          let optionPrice = 0.0
-
-          if (index in prices)
-            optionPrice = Number.parseInt(prices[index], 10)
-          else
-            optionPrice = Number.parseInt(prices.pop() ?? '0', 10)
-
-          additionalOptionsCents += optionPrice
-        }
-      }
-    }
+  const variant = (product.variants as Variant[])[0]
+  variant.id = null
+  variant.option1 = name
+  variant.price = price.toFixed(2)
+  await variant.save({
+    update: true,
   })
-
-  return price + (additionalOptionsCents / 100) - (quantityDiscountCents / 100)
+  // return product
+  return variant.id
 }
 // get product and product meta data
 async function getProductWithMeta(id?: string): Promise<ProductWithMeta> {
