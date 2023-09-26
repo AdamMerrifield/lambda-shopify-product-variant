@@ -14,8 +14,8 @@ const event = {
   resource: '/create',
   multiValueQueryStringParameters: {
     productid: ['522626203700'],
-    quantity: ['25'],
-    properties: ['a=b', 'Rounded Corners=Yes'],
+    quantity: ['500'],
+    properties: ['a=b', 'Rounded Corners=Yes', 'Paper Stock=19pt Natural Savoy'],
   } as APIGatewayProxyEventMultiValueQueryStringParameters,
 } as APIGatewayEvent
 
