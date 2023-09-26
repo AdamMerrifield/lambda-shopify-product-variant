@@ -39,23 +39,26 @@ export async function handler(event: APIGatewayEvent, _context: Context): Promis
         return [v[0], v[1]]
       }))
 
-      body = await createVariant(id, quantity, propertiesParsed)
+      body = { variantid: await createVariant(id, quantity, propertiesParsed) }
     }
     else if (event.resource === '/get-all-products') {
       body = await getAllProducts()
     }
   }
   catch (err) {
+    // fail
     const response = {
       statusCode: 400,
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify(err),
     }
 
     return response
   }
-  // all else fail
+  // success
   const response = {
     statusCode: 200,
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   }
 
