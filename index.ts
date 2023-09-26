@@ -6,11 +6,8 @@ import { restResources } from '@shopify/shopify-api/rest/admin/2023-07'
 import type { Product } from '@shopify/shopify-api/rest/admin/2023-07/product'
 import type { Metafield } from '@shopify/shopify-api/rest/admin/2023-07/metafield'
 import type { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
-
-interface ProductWithMeta {
-  product: Product
-  meta: Metafield[]
-}
+import type { Variant } from '@shopify/shopify-api/rest/admin/2023-07/variant'
+import type { CartItemProps, ProductCustomizerValue, ProductWithMeta } from 'src/types'
 
 // setup shopify api
 const shopify = shopifyApi({
