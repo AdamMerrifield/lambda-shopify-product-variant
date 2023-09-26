@@ -8,7 +8,7 @@
   "keywords": [],
   "main": "index.mjs",
   "scripts": {
-    "build": "rm -rf dist && esbuild index.ts --bundle --minify --sourcemap --platform=node --target=node18 --outdir=dist",
+    "build": "rm -rf dist && esbuild index.ts --bundle --minify --platform=node --target=node18 --outdir=dist",
     "package": "rm -rf dist/index.zip && zip -rj dist/index.zip ./dist/*",
     "deploy": "aws lambda update-function-code --function-name shopify-product-variant --zip-file fileb://dist/index.zip",
     "lint": "eslint .",
