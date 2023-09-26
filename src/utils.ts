@@ -62,7 +62,7 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
     }
   })
   // make sure the keys are always sorted the same way so the name is consistant
-  const name = names.toSorted((a, b) => {
+  names.sort((a, b) => {
     if (a.key < b.key)
       return -1
     if (a.key > b.key)
@@ -70,8 +70,8 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
 
     return 0
   })
-    .map(item => item.val)
-    .join('_')
+
+  const name = names.map(item => `${item.key.replace(/[^a-z0-9]/ig, '')}-${item.val.replace(/[^a-z0-9]/ig, '')}`).join('_')
 
   return {
     price: price + (additionalOptionsCents / 100) - (quantityDiscountCents / 100),
