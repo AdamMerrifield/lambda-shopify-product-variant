@@ -25,3 +25,8 @@ export interface ProductCustomizerValue {
 export interface CartItemProps {
   [key: string]: string
 }
+
+export interface PriceAndName {
+  price: number
+  name: string
+}
