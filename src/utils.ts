@@ -7,7 +7,7 @@ import type { CartItemProps, PriceAndName, ProductCustomizerValue } from 'src/ty
 export function calcPriceAndName(product: Product, meta: Metafield[], quantity: number, properties: CartItemProps): PriceAndName {
   const defaultVariant = getVariantByName(product, 'Default Title')
   const price = defaultVariant ? Number.parseFloat(defaultVariant.price ?? '0.0') : 0.0
-  const name: string[] = []
+  const names: { key: string; val: string }[] = []
   let quantityDiscountCents = 0
   let additionalOptionsCents = 0
 
@@ -31,7 +31,7 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
       })
 
       if (quantityDiscountName !== null)
-        name.push(quantityDiscountName)
+        names.push({ key: '__discount', val: quantityDiscountName })
     }
     else if (namespace === 'product_customizer' && typeof metaField.value === 'string') {
       // all product customizer fields are json
@@ -48,23 +48,34 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
           optionPrice = Number.parseInt(prices[index], 10)
           // only add to the name if the option has a price greater than 0
           if (optionPrice !== 0.0)
-            name.push(options[index])
+            names.push({ key: val.name, val: options[index] })
         }
         else {
           optionPrice = Number.parseInt(prices.pop() ?? '0', 10)
           // only add to the name if the option has a price greater than 0
           if (optionPrice !== 0.0)
-            name.push(options.pop() ?? '')
+            names.push({ key: val.name, val: options.pop() ?? '' })
         }
         // add the options price to total pricing
         additionalOptionsCents += optionPrice
       }
     }
   })
+  // make sure the keys are always sorted the same way so the name is consistant
+  const name = names.toSorted((a, b) => {
+    if (a.key < b.key)
+      return -1
+    if (a.key > b.key)
+      return 1
+
+    return 0
+  })
+    .map(item => item.val)
+    .join('_')
 
   return {
     price: price + (additionalOptionsCents / 100) - (quantityDiscountCents / 100),
-    name: name.length === 0 ? 'Default Title' : name.join('_'),
+    name: name || 'Default Title',
   }
 }
 // get variant with particular name
