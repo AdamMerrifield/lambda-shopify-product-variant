@@ -1,4 +1,6 @@
+import 'dotenv/config'
 import '@shopify/shopify-api/adapters/node'
+import process from 'node:process'
 import type { ConfigParams } from '@shopify/shopify-api'
 import { shopifyApi } from '@shopify/shopify-api'
 import type { FindAllResponse } from '@shopify/shopify-api/rest/base'
@@ -11,16 +13,16 @@ import type { CartItemProps, ProductCustomizerValue, ProductWithMeta } from 'src
 
 // setup shopify api
 const shopify = shopifyApi({
-  apiKey: 'f86f95131242da0365ba4b818ac4bd47',
-  apiSecretKey: '9ef9d1dbdfb9fb8b5c3b152e689e2606',
-  adminApiAccessToken: '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',
+  apiKey: process.env.SHOPIFY_API_KEY,
+  apiSecretKey: process.env.SHOPIFY_API_SECRET_KEY,
+  adminApiAccessToken: process.env.SHOPIFY_ADMIN_ACCESS_TOKEN,
   scopes: ['write_products', 'read_products'],
-  hostName: 'adamdev.myshopify.com',
+  hostName: process.env.SHOPIFY_STORE,
   isCustomStoreApp: true,
   isEmbeddedApp: false,
   restResources,
 } as ConfigParams)
-const session = shopify.session.customAppSession('adamdev.myshopify.com')
+const session = shopify.session.customAppSession(shopify.config.hostName)
 // handle all requests
 export async function handler(event: APIGatewayEvent, _context: Context): Promise<APIGatewayProxyResult> {
   // console.log(event.multiValueQueryStringParameters, event.resource)
