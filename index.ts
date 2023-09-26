@@ -9,7 +9,8 @@ import type { Product } from '@shopify/shopify-api/rest/admin/2023-07/product'
 import type { Metafield } from '@shopify/shopify-api/rest/admin/2023-07/metafield'
 import type { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
 import type { Variant } from '@shopify/shopify-api/rest/admin/2023-07/variant'
-import type { CartItemProps, ProductCustomizerValue, ProductWithMeta } from 'src/types'
+import type { CartItemProps, ProductWithMeta } from './src/types'
+import { calcPriceAndName, getVariantByName } from './src/utils'
 
 // setup shopify api
 const shopify = shopifyApi({
@@ -39,9 +40,6 @@ export async function handler(event: APIGatewayEvent, _context: Context): Promis
       }))
 
       body = await createVariant(id, quantity, propertiesParsed)
-    }
-    else if (event.resource === '/update') {
-      body = await updateVariant()
     }
     else if (event.resource === '/get-all-products') {
       body = await getAllProducts()
@@ -85,13 +83,25 @@ async function getAllProducts(): Promise<Product[]> {
 // create a new product variant
 async function createVariant(id: string, quantity: number, properties: CartItemProps) {
   const { product, meta } = await getProductWithMeta(id)
+  const { price, name } = calcPriceAndName(product, meta, quantity, properties)
 
-  console.log({ meta })
+  const variantByName = getVariantByName(product, name)
 
+  if (variantByName !== null) {
+    if (Number.parseFloat(variantByName.price ?? '0') !== price) {
+      console.error(`Product variant pricing mismatch productid: ${product.id}, variantid: ${variantByName.id} old price: ${variantByName.price}, new price: ${price}`)
+      // update variant pricing
+      variantByName.price = price.toFixed(2)
+      await variantByName.save({
+        update: true,
+      })
+    }
+
+    return variantByName.id
+  }
+  // if we did not find the variant already created, make a new one
   if (product.variants?.length >= 100)
     console.error(`productid ${id} has max variants`)
-
-  console.log(calcPrice(product, meta, quantity, properties))
   // setup new variant
   const variant = (product.variants as Variant[])[0]
   variant.id = null
