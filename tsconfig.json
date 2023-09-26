@@ -10,7 +10,7 @@
     "paths": {
       "~/*": ["src/*"]
     },
-    "types": [],
+    "types": ["node"],
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
