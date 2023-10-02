@@ -1,13 +1,14 @@
 import 'dotenv/config'
 import '@shopify/shopify-api/adapters/node'
 import process from 'node:process'
+import { Buffer } from 'node:buffer'
 import type { ConfigParams } from '@shopify/shopify-api'
 import { shopifyApi } from '@shopify/shopify-api'
 import type { FindAllResponse } from '@shopify/shopify-api/rest/base'
 import { restResources } from '@shopify/shopify-api/rest/admin/2023-07'
 import type { Product } from '@shopify/shopify-api/rest/admin/2023-07/product'
 import type { Metafield } from '@shopify/shopify-api/rest/admin/2023-07/metafield'
-import type { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
+import type { APIGatewayProxyEventV2, APIGatewayProxyResult, Context } from 'aws-lambda'
 import type { Variant } from '@shopify/shopify-api/rest/admin/2023-07/variant'
 import type { CartItemProps, ProductWithMeta } from './src/types'
 import { calcPriceAndName, getVariantByName } from './src/utils'
@@ -25,23 +26,29 @@ const shopify = shopifyApi({
 } as ConfigParams)
 const session = shopify.session.customAppSession(shopify.config.hostName)
 // handle all requests
-export async function handler(event: APIGatewayEvent, _context: Context): Promise<APIGatewayProxyResult> {
+export async function handler(event: APIGatewayProxyEventV2, _context: Context): Promise<APIGatewayProxyResult> {
   let body: null | any = null
 
+  console.log('event', { event, _context })
+
   try {
-    if (event.resource === '/create') {
-      const id = event.multiValueQueryStringParameters?.productid?.[0] ?? '0'
-      const quantity = Number.parseInt(event.multiValueQueryStringParameters?.quantity?.[0] ?? '1', 10)
-      const properties = event.multiValueQueryStringParameters?.properties ?? []
-      const propertiesParsed = Object.fromEntries(properties.map((p: string) => {
-        const v = p.split('=')
+    if (event.rawPath === '/create') {
+      const postData: { [key: string]: any } = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
 
-        return [v[0], v[1]]
-      }))
+      console.log('CREATE: ', postData)
 
-      body = { variantid: await createVariant(id, quantity, propertiesParsed) }
+      const productid: string = postData?.productid ?? '0'
+      const quantity = Number.parseInt(postData?.quantity ?? '1', 10)
+      const properties: CartItemProps = {}
+
+      for (const name in postData) {
+        if (name.startsWith('properties'))
+          properties[name.replace(/properties\[(.+)\]/, '$1')] = postData[name]
+      }
+
+      body = { variantid: await createVariant(productid, quantity, properties) }
     }
-    else if (event.resource === '/get-all-products') {
+    else if (event.rawPath === '/get-all-products') {
       body = await getAllProducts()
     }
   }

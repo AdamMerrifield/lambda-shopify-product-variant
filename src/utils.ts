@@ -47,17 +47,18 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
         if (index in prices) {
           optionPrice = Number.parseInt(prices[index], 10)
           // only add to the name if the option has a price greater than 0
-          if (optionPrice !== 0.0)
+          if (optionPrice > 0.0)
             names.push({ key: val.name, val: options[index] })
         }
         else {
           optionPrice = Number.parseInt(prices.pop() ?? '0', 10)
           // only add to the name if the option has a price greater than 0
-          if (optionPrice !== 0.0)
+          if (optionPrice > 0.0)
             names.push({ key: val.name, val: options.pop() ?? '' })
         }
         // add the options price to total pricing
-        additionalOptionsCents += optionPrice
+        if (optionPrice > 0.0)
+          additionalOptionsCents += optionPrice
       }
     }
   })
