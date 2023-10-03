@@ -122,6 +122,7 @@ async function createVariant(id: string, quantity: number, properties: CartItemP
   variant.product_id = id
   variant.option1 = name
   variant.price = price.toFixed(2)
+  variant.inventory_policy = 'continue'
   // copy some props from the default variant
   const copyProps: (keyof Variant)[] = ['sku', 'inventory_item_id', 'weight_unit', 'weight_unit', 'grams', 'taxable', 'tax_code', 'requires_shipping']
   copyProps.forEach((name: keyof Variant) => {
