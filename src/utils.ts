@@ -7,8 +7,8 @@ import type { CartItemProps, PriceAndName, ProductCustomizerValue } from 'src/ty
 export function calcPriceAndName(product: Product, meta: Metafield[], quantity: number, properties: CartItemProps): PriceAndName {
   const defaultVariant = getVariantByName(product, 'Default Title')
   const price = defaultVariant ? Number.parseFloat(defaultVariant.price ?? '0.0') : 0.0
-  const names: { key: string; val: string }[] = []
-  let quantityDiscountCents = 0
+  const names: { key: string; val: string; price?: number }[] = []
+  let quantityDiscountPercent = 0
   let additionalOptionsCents = 0
 
   if (price === 0.0)
@@ -24,14 +24,14 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
       quantityDiscounts.forEach((discounts: string) => {
         const v = discounts.split(':').map(val => Number.parseInt(val, 10))
         // if the quantity passed in is greater and the discount is greater, use this discount
-        if (v[0] <= quantity && v[1] >= quantityDiscountCents) {
+        if (v[0] <= quantity && v[1] >= quantityDiscountPercent) {
           quantityDiscountName = v[0].toString()
-          quantityDiscountCents = v[1]
+          quantityDiscountPercent = v[1]
         }
       })
 
       if (quantityDiscountName !== null)
-        names.push({ key: '__discount', val: quantityDiscountName })
+        names.push({ key: '__discount', val: quantityDiscountName, price: quantityDiscountPercent })
     }
     else if (namespace === 'product_customizer' && typeof metaField.value === 'string') {
       // all product customizer fields are json
@@ -48,13 +48,13 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
           optionPrice = Number.parseInt(prices[index], 10)
           // only add to the name if the option has a price greater than 0
           if (optionPrice > 0.0)
-            names.push({ key: val.name, val: options[index] })
+            names.push({ key: val.name, val: options[index], price: optionPrice })
         }
         else {
           optionPrice = Number.parseInt(prices.pop() ?? '0', 10)
           // only add to the name if the option has a price greater than 0
           if (optionPrice > 0.0)
-            names.push({ key: val.name, val: options.pop() ?? '' })
+            names.push({ key: val.name, val: options.pop() ?? '', price: optionPrice })
         }
         // add the options price to total pricing
         if (optionPrice > 0.0)
@@ -75,7 +75,7 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
   const name = names.map(item => `${item.key.replace(/[^a-z0-9]/ig, '')}-${item.val.replace(/[^a-z0-9]/ig, '')}`).join('_')
 
   return {
-    price: price + (additionalOptionsCents / 100) - (quantityDiscountCents / 100),
+    price: (price + (additionalOptionsCents / 100)) * (quantityDiscountPercent / 100),
     name: name || 'Default Title',
   }
 }
