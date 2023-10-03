@@ -3,7 +3,7 @@ import '@shopify/shopify-api/adapters/node'
 import process from 'node:process'
 import { Buffer } from 'node:buffer'
 import type { ConfigParams } from '@shopify/shopify-api'
-import { shopifyApi } from '@shopify/shopify-api'
+import { ApiVersion, shopifyApi } from '@shopify/shopify-api'
 import type { FindAllResponse } from '@shopify/shopify-api/rest/base'
 import { restResources } from '@shopify/shopify-api/rest/admin/2023-07'
 import type { Product } from '@shopify/shopify-api/rest/admin/2023-07/product'
@@ -22,6 +22,7 @@ const shopify = shopifyApi({
   hostName: process.env.SHOPIFY_STORE,
   isCustomStoreApp: true,
   isEmbeddedApp: false,
+  apiVersion: ApiVersion.July23,
   restResources,
 } as ConfigParams)
 const session = shopify.session.customAppSession(shopify.config.hostName)
@@ -29,13 +30,9 @@ const session = shopify.session.customAppSession(shopify.config.hostName)
 export async function handler(event: APIGatewayProxyEventV2, _context: Context): Promise<APIGatewayProxyResult> {
   let body: null | any = null
 
-  console.log('event', { event, _context })
-
   try {
     if (event.rawPath === '/create') {
       const postData: { [key: string]: any } = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
-
-      console.log('CREATE: ', postData)
 
       const productid: string = postData?.productid ?? '0'
       const quantity = Number.parseInt(postData?.quantity ?? '1', 10)
@@ -112,16 +109,27 @@ async function createVariant(id: string, quantity: number, properties: CartItemP
   // if we did not find the variant already created, make a new one
   if (product.variants?.length >= 100)
     console.error(`productid ${id} has max variants`)
+
+  const defaultVariant = getVariantByName(product, 'Default Title')
+
+  if (defaultVariant === null)
+    throw new Error(`Can not find default variant for productid: ${id}`)
   // setup new variant
-  const variant = (product.variants as Variant[])[0]
-  variant.id = null
-  variant.title = null
+  const variant = new shopify.rest.Variant({
+    session,
+  })
+
+  variant.product_id = id
   variant.option1 = name
   variant.price = price.toFixed(2)
-  await variant.save({
-    update: true,
+  // copy some props from the default variant
+  const copyProps: (keyof Variant)[] = ['sku', 'inventory_item_id', 'weight_unit', 'weight_unit', 'grams', 'taxable', 'tax_code', 'requires_shipping']
+  copyProps.forEach((name: keyof Variant) => {
+    variant[name] = defaultVariant[name]
   })
-  // return product
+
+  await variant.save({ update: true })
+  // return product variant
   return variant.id
 }
 // get product and product meta data
