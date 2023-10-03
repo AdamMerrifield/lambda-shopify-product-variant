@@ -97,11 +97,19 @@ async function createVariant(id: string, quantity: number, properties: CartItemP
   if (variantByName !== null) {
     if (Number.parseFloat(variantByName.price ?? '0') !== price) {
       console.error(`Product variant pricing mismatch productid: ${product.id}, variantid: ${variantByName.id} old price: ${variantByName.price}, new price: ${price}`)
+      // create variant for updating
+      const variant = new shopify.rest.Variant({
+        session,
+      })
+      Object.assign(variant, variantByName)
       // update variant pricing
-      variantByName.price = price.toFixed(2)
-      await variantByName.save({
+      variant.price = price.toFixed(2)
+
+      await variant.save({
         update: true,
       })
+
+      return variant.id
     }
 
     return variantByName.id
