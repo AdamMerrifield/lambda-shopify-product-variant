@@ -73,9 +73,11 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
   })
 
   const name = names.map(item => `${item.key.replace(/[^a-z0-9]/ig, '')}-${item.val.replace(/[^a-z0-9]/ig, '')}`).join('_')
+  const quantityDiscountPercentInverse = 1 - (quantityDiscountPercent / 100)
+  const totalPrice = (price + (additionalOptionsCents / 100)) * quantityDiscountPercentInverse
 
   return {
-    price: (price + (additionalOptionsCents / 100)) * (quantityDiscountPercent / 100),
+    price: Math.round((totalPrice + Number.EPSILON) * 100) / 100,
     name: name || 'Default Title',
   }
 }
