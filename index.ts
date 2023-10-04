@@ -2,7 +2,6 @@ import 'dotenv/config'
 import '@shopify/shopify-api/adapters/node'
 import process from 'node:process'
 import { Buffer } from 'node:buffer'
-import type { ConfigParams } from '@shopify/shopify-api'
 import { ApiVersion, shopifyApi } from '@shopify/shopify-api'
 import type { FindAllResponse } from '@shopify/shopify-api/rest/base'
 import { restResources } from '@shopify/shopify-api/rest/admin/2023-07'
@@ -16,25 +15,25 @@ import { calcPriceAndName, getVariantByName } from './src/utils'
 // setup shopify api
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
-  apiSecretKey: process.env.SHOPIFY_API_SECRET_KEY,
+  apiSecretKey: process.env.SHOPIFY_API_SECRET_KEY!,
   adminApiAccessToken: process.env.SHOPIFY_ADMIN_ACCESS_TOKEN,
   scopes: ['write_products', 'read_products'],
-  hostName: process.env.SHOPIFY_STORE,
+  hostName: process.env.SHOPIFY_STORE!,
   isCustomStoreApp: true,
   isEmbeddedApp: false,
   apiVersion: ApiVersion.July23,
   restResources,
-} as ConfigParams)
+})
 const session = shopify.session.customAppSession(shopify.config.hostName)
 // handle all requests
 export async function handler(event: APIGatewayProxyEventV2, _context: Context): Promise<APIGatewayProxyResult> {
-  let body: null | any = null
+  let body: any = null
 
   try {
     if (event.rawPath === '/create') {
-      const postData: { [key: string]: any } = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
+      const postData: Record<string, any> = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
 
-      const productid: string = postData?.productid ?? '0'
+      const productid: number = Number.parseInt(postData?.productid ?? '0', 10)
       const quantity = Number.parseInt(postData?.quantity ?? '1', 10)
       const properties: CartItemProps = {}
 
@@ -88,7 +87,7 @@ async function getAllProducts(): Promise<Product[]> {
   return products
 }
 // create a new product variant
-async function createVariant(id: string, quantity: number, properties: CartItemProps) {
+async function createVariant(id: number, quantity: number, properties: CartItemProps) {
   const { product, meta } = await getProductWithMeta(id)
   const { price, name } = calcPriceAndName(product, meta, quantity, properties)
 
@@ -142,8 +141,8 @@ async function createVariant(id: string, quantity: number, properties: CartItemP
   return variant.id
 }
 // get product and product meta data
-async function getProductWithMeta(id?: string): Promise<ProductWithMeta> {
-  const productPromise: Promise<Product> = shopify.rest.Product.find({
+async function getProductWithMeta(id: number): Promise<ProductWithMeta> {
+  const productPromise = shopify.rest.Product.find({
     session,
     id,
   })
