@@ -11,7 +11,7 @@
     "build": "rm -rf dist && esbuild index.ts --bundle --minify --platform=node --target=node18 --outdir=dist",
     "package": "rm -rf dist/index.zip && zip -rj dist/index.zip ./dist/*",
     "deploy": "aws lambda update-function-code --function-name product-variant --zip-file fileb://dist/index.zip --profile corefact",
-    "lint": "eslint .",
+    "lint": "eslint . && tsc --noEmit",
     "lint-fix": "eslint . --fix",
     "test": "ts-node --experimental-specifier-resolution=node --esm index.test.ts"
   },
