@@ -83,16 +83,21 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
 }
 // get variant with particular name
 export function getVariantByName(product: Product, name: string): Variant | null {
-  const variants = product.variants as Variant[]
-  const l = variants.length ?? 0
+  const variants = product.variants
+  let foundVariant: Variant | null = null
 
-  for (let i = 0; i < l; i++) {
-    if (variants[i].option1 === name)
-      return variants[i]
-  }
+  if (variants === null)
+    return null
+
+  variants.every((variant: Variant) => {
+    if (variant.option1 === name)
+      foundVariant = variant
+
+    return foundVariant === null
+  })
   // special case for default variant
-  if (name === 'Default Title' && 0 in variants)
-    return variants[0]
+  if (name === 'Default Title' && foundVariant === null)
+    foundVariant = variants.find(Boolean)
 
-  return null
+  return foundVariant
 }
