@@ -3,6 +3,8 @@ import type { Metafield } from '@shopify/shopify-api/rest/admin/2023-07/metafiel
 import type { Variant } from '@shopify/shopify-api/rest/admin/2023-07/variant'
 import type { CartItemProps, PriceAndName, ProductCustomizerValue } from 'src/types'
 
+const CALC_QUANTITY_DISCOUNT = false
+
 // get pricing from properties and metafields passed in
 export function calcPriceAndName(product: Product, meta: Metafield[], quantity: number, properties: CartItemProps): PriceAndName {
   const defaultVariant = getVariantByName(product, 'Default Title')
@@ -17,7 +19,7 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
   meta.forEach((metaField) => {
     const namespace = metaField.namespace?.trim()
     // setup quantity discounts
-    if (namespace === 'discount' && metaField.key?.trim() === 'key' && typeof metaField.value === 'string') {
+    if (CALC_QUANTITY_DISCOUNT && namespace === 'discount' && metaField.key?.trim() === 'key' && typeof metaField.value === 'string') {
       const quantityDiscounts = metaField.value.split(',')
       let quantityDiscountName = null
       // go through each discount
