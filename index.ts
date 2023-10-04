@@ -33,7 +33,7 @@ export async function handler(event: APIGatewayProxyEventV2, _context: Context):
     if (event.rawPath === '/create') {
       const postData: Record<string, any> = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
 
-      const productid: number = Number.parseInt(postData?.productid ?? '0', 10)
+      const productid = Number.parseInt(postData?.productid ?? '0', 10)
       const quantity = Number.parseInt(postData?.quantity ?? '1', 10)
       const properties: CartItemProps = {}
 
