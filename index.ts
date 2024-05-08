@@ -44,6 +44,12 @@ export async function handler(event: APIGatewayProxyEventV2, _context: Context):
 
       body = { variantid: await createVariant(productid, quantity, properties) }
     }
+    else if (event.rawPath === '/get-product') {
+      const postData: Record<string, any> = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
+      const productid = Number.parseInt(postData?.productid ?? '0', 10)
+
+      body = await getProductWithMeta(productid)
+    }
     else if (event.rawPath === '/get-all-products') {
       body = await getAllProducts()
     }
