@@ -2,13 +2,13 @@ import 'dotenv/config'
 import '@shopify/shopify-api/adapters/node'
 import process from 'node:process'
 import { Buffer } from 'node:buffer'
-import { ApiVersion, shopifyApi } from '@shopify/shopify-api'
+import { LATEST_API_VERSION, shopifyApi } from '@shopify/shopify-api'
 import type { FindAllResponse } from '@shopify/shopify-api/rest/base'
-import { restResources } from '@shopify/shopify-api/rest/admin/2023-07'
-import type { Product } from '@shopify/shopify-api/rest/admin/2023-07/product'
-import type { Metafield } from '@shopify/shopify-api/rest/admin/2023-07/metafield'
+import { restResources } from '@shopify/shopify-api/rest/admin/2024-04'
+import type { Product } from '@shopify/shopify-api/rest/admin/2024-04/product'
+import type { Metafield } from '@shopify/shopify-api/rest/admin/2024-04/metafield'
 import type { APIGatewayProxyEventV2, APIGatewayProxyResult, Context } from 'aws-lambda'
-import type { Variant } from '@shopify/shopify-api/rest/admin/2023-07/variant'
+import type { Variant } from '@shopify/shopify-api/rest/admin/2024-04/variant'
 import type { CartItemProps, ProductWithMeta } from './src/types'
 import { calcPriceAndName, getVariantByName } from './src/utils'
 
@@ -21,7 +21,7 @@ const shopify = shopifyApi({
   hostName: process.env.SHOPIFY_STORE!,
   isCustomStoreApp: true,
   isEmbeddedApp: false,
-  apiVersion: ApiVersion.July23,
+  apiVersion: LATEST_API_VERSION,
   restResources,
 })
 const session = shopify.session.customAppSession(shopify.config.hostName)

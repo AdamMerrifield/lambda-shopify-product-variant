@@ -1,5 +1,5 @@
-import type { Product } from '@shopify/shopify-api/rest/admin/2023-07/product'
-import type { Metafield } from '@shopify/shopify-api/rest/admin/2023-07/metafield'
+import type { Product } from '@shopify/shopify-api/rest/admin/2024-04/product'
+import type { Metafield } from '@shopify/shopify-api/rest/admin/2024-04/metafield'
 
 export interface ProductWithMeta {
   product: Product

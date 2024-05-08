@@ -17,7 +17,7 @@
     "test": "tsx index.test.ts"
   },
   "dependencies": {
-    "@shopify/shopify-api": "^7.7.0",
+    "@shopify/shopify-api": "^9.7.2",
     "@types/aws-lambda": "^8.10.137",
     "dotenv": "^16.4.5"
   },
