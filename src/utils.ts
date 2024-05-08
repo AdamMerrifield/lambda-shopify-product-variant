@@ -9,7 +9,7 @@ const CALC_QUANTITY_DISCOUNT = false
 export function calcPriceAndName(product: Product, meta: Metafield[], quantity: number, properties: CartItemProps): PriceAndName {
   const defaultVariant = getVariantByName(product, 'Default Title')
   const price = defaultVariant ? Number.parseFloat(defaultVariant.price ?? '0.0') : 0.0
-  const names: { key: string; val: string; price?: number }[] = []
+  const names: { key: string, val: string, price?: number }[] = []
   let quantityDiscountPercent = 0
   let additionalOptionsCents = 0
 
