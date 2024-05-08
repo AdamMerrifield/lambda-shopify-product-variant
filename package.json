@@ -13,7 +13,7 @@
     "deploy": "aws lambda update-function-code --function-name product-variant --zip-file fileb://dist/index.zip --profile corefact",
     "lint": "eslint . && tsc --noEmit",
     "lint-fix": "eslint . --fix",
-    "test": "ts-node --experimental-specifier-resolution=node --esm index.test.ts"
+    "test": "tsx index.test.ts"
   },
   "dependencies": {
     "@shopify/shopify-api": "^7.7.0",
