@@ -13,7 +13,6 @@
     "deploy": "aws lambda update-function-code --function-name product-variant --zip-file fileb://dist/index.zip --profile corefact",
     "lint": "eslint . && tsc --noEmit",
     "lint-fix": "eslint . --fix",
-    "typecheck": "tsc --noEmit",
     "test": "tsx index.test.ts"
   },
   "dependencies": {
