@@ -13,20 +13,23 @@
     "deploy": "aws lambda update-function-code --function-name product-variant --zip-file fileb://dist/index.zip --profile corefact",
     "lint": "eslint . && tsc --noEmit",
     "lint-fix": "eslint . --fix",
-    "test": "tsx index.test.ts"
+    "test": "tsx index.test.ts",
+    "graphql-codegen": "graphql-codegen"
   },
   "dependencies": {
     "@shopify/admin-api-client": "^0.2.9",
     "@shopify/shopify-api": "^9.7.2",
-    "@types/aws-lambda": "^8.10.137",
+    "@types/aws-lambda": "^8.10.138",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^2.16.3",
-    "@types/node": "^20.12.10",
-    "esbuild": "^0.21.1",
+    "@antfu/eslint-config": "^2.18.1",
+    "@graphql-codegen/cli": "^5.0.2",
+    "@shopify/api-codegen-preset": "^0.0.7",
+    "@types/node": "^20.12.12",
+    "esbuild": "^0.21.3",
     "eslint": "^8.57.0",
-    "tsx": "^4.9.3",
+    "tsx": "^4.10.5",
     "typescript": "^5.4.5"
   }
 }
