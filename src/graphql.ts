@@ -7,10 +7,12 @@ const client = createAdminApiClient({
   storeDomain: process.env.SHOPIFY_STORE!,
   apiVersion: LATEST_API_VERSION,
   accessToken: process.env.SHOPIFY_ADMIN_ACCESS_TOKEN!,
+  retries: 3,
+
 })
 
 export async function getAllProductsWithStockMeta() {
-  const operation = `
+  const { data, errors, extensions } = await client.request(`#graphql
   query ProductQuery($id: ID!) {
     product(id: $id) {
       id
@@ -27,9 +29,7 @@ export async function getAllProductsWithStockMeta() {
       }
     }
   }
-`
-
-  const { data, errors, extensions } = await client.request(operation, {
+`, {
     variables: {
       id: 'gid://shopify/Product/7446026977391',
     },
