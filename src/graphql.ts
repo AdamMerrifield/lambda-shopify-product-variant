@@ -15,10 +15,10 @@ export async function updateAllProductsWithStockMeta(paperStockValue: Record<str
 
   for (const key in products) {
     for (const productId of products[key]) {
-      console.log({ key, productId })
+      // console.log({ key, productId })
 
       if (key === 'base') {
-        // updateProductStockMeta(productId, 'customizer', paperStockValue)
+        updateProductStockMeta(productId, 'customizer', paperStockValue)
       }
       else {
         const basePaperstock = { position: '0000001000', type: 'select', options: '', option_prices: '', description: '', placeholder: 'Please choose one', required: '1', label: '', fonts: '0', option_id: '746585', product_option_id: '14174152', name: 'Paper Stock' }
@@ -34,7 +34,7 @@ export async function updateAllProductsWithStockMeta(paperStockValue: Record<str
         basePaperstock.options = options.join(',')
         basePaperstock.option_prices = optionsPrices.join(',')
 
-        console.log({ divisor, options, optionsPrices, basePaperstock })
+        // console.log({ divisor, options, optionsPrices, basePaperstock })
         updateProductStockMeta(productId, 'product_customizer', basePaperstock)
       }
     }
@@ -73,6 +73,10 @@ async function updateProductStockMeta(productId: string, namespace: string, valu
           }
         }
       }
+      userErrors {
+        field
+        message
+      }
     }
   }
 `, {
@@ -80,6 +84,8 @@ async function updateProductStockMeta(productId: string, namespace: string, valu
       input,
     },
   })
+
+  console.log(data?.productUpdate?.userErrors)
 
   if (errors) {
     console.log(errors, errors?.graphQLErrors?.[0].locations)
@@ -118,7 +124,7 @@ async function removeProductMetafield(id: string) {
   if (errors)
     console.log(errors, errors?.graphQLErrors?.[0].locations)
 
-  console.log(data)
+  // console.log(data)
 }
 
 export async function getAllProductsWithStockMeta() {
