@@ -11,7 +11,7 @@ import type { APIGatewayProxyEventV2, APIGatewayProxyResult, Context } from 'aws
 import type { Variant } from '@shopify/shopify-api/rest/admin/2024-04/variant'
 import type { CartItemProps, ProductWithMeta } from './src/types'
 import { calcPriceAndName, getVariantByName } from './src/utils'
-import { getAllProductsWithStockMeta } from '~/graphql'
+import { getAllProductsWithStockMeta, updateAllProductsWithStockMeta } from '~/graphql'
 
 // setup shopify api
 const shopify = shopifyApi({
@@ -56,6 +56,11 @@ export async function handler(event: APIGatewayProxyEventV2, _context: Context):
     }
     else if (event.rawPath === '/get-all-products-with-stock-meta') {
       body = await getAllProductsWithStockMeta()
+    }
+    else if (event.rawPath === '/update-all-products-with-stock-meta') {
+      const postData: Record<string, any> = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
+
+      body = await updateAllProductsWithStockMeta(postData)
     }
   }
   catch (err) {
