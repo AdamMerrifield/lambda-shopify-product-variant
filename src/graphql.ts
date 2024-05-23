@@ -35,7 +35,8 @@ export async function updateAllProductsWithStockMeta(paperStockValue: Record<str
         basePaperstock.option_prices = optionsPrices.join(',')
 
         // console.log({ divisor, options, optionsPrices, basePaperstock })
-        updateProductStockMeta(productId, 'product_customizer', basePaperstock)
+        if (await updateProductStockMeta(productId, 'product_customizer', basePaperstock))
+          await removeOldStockMetafield(productId)
       }
     }
   }
@@ -47,55 +48,83 @@ export async function updateAllProductsWithStockMeta(paperStockValue: Record<str
   }
 }
 
-async function updateProductStockMeta(productId: string, namespace: string, value: Record<string, any>) {
-  const input = {
-    id: productId,
-    metafields: [{
+async function updateProductStockMeta(productId: string, namespace: string, value: Record<string, any>): Promise<boolean> {
+  const metafields = [
+    {
+      ownerId: productId,
       namespace,
       key: 'Paper Stock',
       value: JSON.stringify(value),
       type: 'json',
-    }],
-  }
+    },
+  ]
 
   const { data, errors } = await client.request(`#graphql
-  mutation productUpdate($input: ProductInput!) {
-    productUpdate(input: $input) {
-      product {
-        metafields(first: 100) {
-          edges {
-            node {
-              id
-              namespace
-              key
-              value
-            }
-          }
-        }
+  mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
+    metafieldsSet(metafields: $metafields) {
+      metafields {
+        key
+        namespace
+        value
+        createdAt
+        updatedAt
       }
       userErrors {
         field
         message
+        code
       }
     }
   }
 `, {
     variables: {
-      input,
+      metafields,
     },
   })
 
-  console.log(data?.productUpdate?.userErrors)
+  if (errors) {
+    console.log(errors, errors?.graphQLErrors?.[0].locations)
+
+    return false
+  }
+
+  return true
+}
+
+async function removeOldStockMetafield(productId: string) {
+  const { data, errors } = await client.request(`#graphql
+  query Product($id: ID!){
+    product(id: $id) {
+      id
+      title
+      handle
+
+      metafields(first: 100) {
+        nodes {
+          id
+          namespace
+          key
+          value
+        }
+      }
+    }
+  }
+`, {
+    variables: {
+      id: productId,
+    },
+  })
 
   if (errors) {
     console.log(errors, errors?.graphQLErrors?.[0].locations)
-  }
-  else if (data?.productUpdate?.product?.metafields?.edges && namespace === 'product_customizer') {
-    console.log(data.productUpdate.product.metafields.edges)
 
-    for (const val of data.productUpdate.product.metafields.edges) {
-      if (val.node.namespace === 'product_customizer' && val.node.key !== 'Paper Stock' && val.node.value.includes('"name":"Paper Stock"'))
-        removeProductMetafield(val.node.id)
+    return
+  }
+
+  if (data?.product?.metafields?.nodes) {
+    for (const val of data.product.metafields.nodes) {
+      if (val.namespace === 'product_customizer' && val.key !== 'Paper Stock' && val.value.includes('"name":"Paper Stock"'))
+        await removeProductMetafield(val.node.id)
     }
   }
 }
