@@ -124,7 +124,7 @@ async function removeOldStockMetafield(productId: string) {
   if (data?.product?.metafields?.nodes) {
     for (const val of data.product.metafields.nodes) {
       if (val.namespace === 'product_customizer' && val.key !== 'Paper Stock' && val.value.includes('"name":"Paper Stock"'))
-        await removeProductMetafield(val.node.id)
+        await removeProductMetafield(val.id)
     }
   }
 }
