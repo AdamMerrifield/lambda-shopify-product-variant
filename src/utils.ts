@@ -74,7 +74,7 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
     return 0
   })
 
-  const name = names.map(item => `${item.key.replace(/[^a-z0-9]/ig, '')}-${item.val.replace(/[^a-z0-9]/ig, '')}`).join('_')
+  const name = names.map(item => `${item.key.replace(/[^a-z0-9]/gi, '')}-${item.val.replace(/[^a-z0-9]/gi, '')}`).join('_')
   const quantityDiscountPercentInverse = 1 - (quantityDiscountPercent / 100)
   const totalPrice = (price + (additionalOptionsCents / 100)) * quantityDiscountPercentInverse
 
@@ -84,7 +84,7 @@ export function calcPriceAndName(product: Product, meta: Metafield[], quantity: 
   }
 }
 // get variant with particular name
-export function getVariantByName(product: Product, name: string): Variant | null {
+export function getVariantByName(product: Product, name: string, currentVariantsInCart: string[] = []): Variant | null {
   const variants = product.variants
   let foundVariant: Variant | null = null
 
@@ -92,7 +92,8 @@ export function getVariantByName(product: Product, name: string): Variant | null
     return null
 
   variants.every((variant: Variant) => {
-    if (variant.option1 === name)
+    // disallow variants that are already in the cart & allow variant name to end with `__\d`
+    if (!currentVariantsInCart.includes(variant.option1) && variant.option1.replace(/(__\d+)?$/) === name)
       foundVariant = variant
 
     return foundVariant === null

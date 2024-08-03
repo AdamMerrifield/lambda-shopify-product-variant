@@ -36,6 +36,7 @@ export async function handler(event: APIGatewayProxyEventV2, _context: Context):
 
       const productid = Number.parseInt(postData?.productid ?? '0', 10)
       const quantity = Number.parseInt(postData?.quantity ?? '1', 10)
+      const currentVariantsInCart: string[] = postData?._currentVariantsInCart ?? []
       const properties: CartItemProps = {}
 
       for (const name in postData) {
@@ -43,7 +44,7 @@ export async function handler(event: APIGatewayProxyEventV2, _context: Context):
           properties[name.replace(/properties\[(.+)\]/, '$1')] = postData[name]
       }
 
-      body = { variantid: await createVariant(productid, quantity, properties) }
+      body = { variantid: await createVariant(productid, quantity, properties, currentVariantsInCart) }
     }
     else if (event.rawPath === '/get-product') {
       const postData: Record<string, any> = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
@@ -102,11 +103,11 @@ async function getAllProducts(): Promise<Product[]> {
   return products
 }
 // create a new product variant
-async function createVariant(id: number, quantity: number, properties: CartItemProps) {
+async function createVariant(id: number, quantity: number, properties: CartItemProps, currentVariantsInCart: string[]) {
   const { product, meta } = await getProductWithMeta(id)
   const { price, name } = calcPriceAndName(product, meta, quantity, properties)
 
-  const variantByName = getVariantByName(product, name)
+  const variantByName = getVariantByName(product, name, currentVariantsInCart)
 
   if (variantByName !== null) {
     if (Number.parseFloat(variantByName.price ?? '0') !== price) {
@@ -142,13 +143,19 @@ async function createVariant(id: number, quantity: number, properties: CartItemP
   })
 
   variant.product_id = id
-  variant.option1 = name
+  // add suffix to the name if the user already has this variant in their cart
+  let option1 = name
+  let i = 0
+  while (currentVariantsInCart.includes(option1))
+    option1 = `${name}__${i++}`
+
+  variant.option1 = option1
   variant.price = price.toFixed(2)
   variant.inventory_policy = 'continue'
   // copy some props from the default variant
   const copyProps: (keyof Variant)[] = ['sku', 'inventory_item_id', 'weight_unit', 'weight_unit', 'grams', 'taxable', 'tax_code', 'requires_shipping']
-  copyProps.forEach((name: keyof Variant) => {
-    variant[name] = defaultVariant[name]
+  copyProps.forEach((propName) => {
+    variant[propName] = defaultVariant[propName]
   })
 
   await variant.save({ update: true })
@@ -168,10 +175,7 @@ async function getProductWithMeta(id: number): Promise<ProductWithMeta> {
     limit: 250,
   })
 
-  await Promise.all([productPromise, metaPromise])
-
-  const product = await productPromise
-  const meta = await metaPromise
+  const [product, meta] = await Promise.all([productPromise, metaPromise])
 
   if (product === null)
     throw new Error('Invalid Product ID')
