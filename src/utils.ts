@@ -99,7 +99,7 @@ export function getVariantByName(product: Product, name: string, currentVariants
     return foundVariant === null
   })
   // special case for default variant
-  if (name === 'Default Title' && foundVariant === null)
+  if (!currentVariantsInCart.includes('Default Title') && name === 'Default Title' && foundVariant === null)
     foundVariant = variants.find(Boolean)
 
   return foundVariant

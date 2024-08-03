@@ -106,6 +106,8 @@ async function getAllProducts(): Promise<Product[]> {
 async function createVariant(id: number, quantity: number, properties: CartItemProps, currentVariantsInCart: string[]) {
   const { product, meta } = await getProductWithMeta(id)
   const { price, name } = calcPriceAndName(product, meta, quantity, properties)
+  // force add default to `currentVariantsInCart` list for all products
+  currentVariantsInCart.push('Default Title')
 
   const variantByName = getVariantByName(product, name, currentVariantsInCart)
 
