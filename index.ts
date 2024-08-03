@@ -129,7 +129,7 @@ async function createVariant(id: number, quantity: number, properties: CartItemP
     return variantByName.id
   }
   // if we did not find the variant already created, make a new one
-  if (product.variants?.length >= 100)
+  if (product.variants?.length >= 250)
     console.error(`productid ${id} has max variants`)
 
   const defaultVariant = getVariantByName(product, 'Default Title')
