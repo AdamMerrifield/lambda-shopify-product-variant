@@ -93,7 +93,7 @@ export function getVariantByName(product: Product, name: string, currentVariants
 
   variants.every((variant: Variant) => {
     // disallow variants that are already in the cart & allow variant name to end with `__\d`
-    if (!currentVariantsInCart.includes(variant.option1) && variant.option1.replace(/(__\d+)?$/) === name)
+    if (!currentVariantsInCart.includes(variant.option1) && variant.option1.replace(/(__\d+)?$/, '') === name)
       foundVariant = variant
 
     return foundVariant === null
