@@ -66,13 +66,15 @@ export async function handler(event: APIGatewayProxyEventV2, _context: Context):
       body = await updateAllProductsWithStockMeta(postData)
     }
     else if (event.rawPath === '/get-logo-upload-url') {
-      // const postData: Record<string, any> = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
+      const postData: Record<string, any> = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
 
       const key = uuidv4()
+      const name = `${key}.${postData.ext}`
 
       body = {
         key,
-        url: await getPresignedUploadUrlForLogo(key),
+        name,
+        url: await getPresignedUploadUrlForLogo(name),
       }
     }
   }
