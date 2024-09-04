@@ -17,19 +17,23 @@
     "graphql-codegen": "graphql-codegen"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.637.0",
+    "@aws-sdk/s3-request-presigner": "^3.637.0",
     "@shopify/admin-api-client": "^0.2.9",
     "@shopify/shopify-api": "^9.7.2",
-    "@types/aws-lambda": "^8.10.138",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^2.18.1",
+    "@antfu/eslint-config": "^2.27.3",
     "@graphql-codegen/cli": "^5.0.2",
     "@shopify/api-codegen-preset": "^0.0.7",
-    "@types/node": "^20.12.12",
-    "esbuild": "^0.21.3",
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^20.16.3",
+    "@types/uuid": "^10.0.0",
+    "esbuild": "^0.21.5",
     "eslint": "^8.57.0",
-    "tsx": "^4.10.5",
-    "typescript": "^5.4.5"
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
   }
 }

@@ -9,9 +9,11 @@ import type { Product } from '@shopify/shopify-api/rest/admin/2024-04/product'
 import type { Metafield } from '@shopify/shopify-api/rest/admin/2024-04/metafield'
 import type { APIGatewayProxyEventV2, APIGatewayProxyResult, Context } from 'aws-lambda'
 import type { Variant } from '@shopify/shopify-api/rest/admin/2024-04/variant'
+import { v4 as uuidv4 } from 'uuid'
 import type { CartItemProps, ProductWithMeta } from './src/types'
 import { calcPriceAndName, getVariantByName } from './src/utils'
 import { getAllProductsWithStockMeta, updateAllProductsWithStockMeta } from '~/graphql'
+import { getPresignedUploadUrlForLogo } from '~/s3-utils'
 
 // setup shopify api
 const shopify = shopifyApi({
@@ -62,6 +64,16 @@ export async function handler(event: APIGatewayProxyEventV2, _context: Context):
       const postData: Record<string, any> = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
 
       body = await updateAllProductsWithStockMeta(postData)
+    }
+    else if (event.rawPath === '/get-logo-upload-url') {
+      // const postData: Record<string, any> = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
+
+      const key = uuidv4()
+
+      body = {
+        key,
+        url: await getPresignedUploadUrlForLogo(key),
+      }
     }
   }
   catch (err) {
