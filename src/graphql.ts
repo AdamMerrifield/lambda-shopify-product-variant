@@ -234,3 +234,45 @@ async function getProducts(cursor: string | null = null) {
 
   return data?.products ?? null
 }
+
+export async function updateCustomerMetafield(cid: string, logoValue: string) {
+  const metafields = [
+    {
+      ownerId: `gid://shopify/Customer/${cid}`,
+      namespace: 'logo',
+      key: 'src',
+      value: logoValue,
+      type: 'string',
+    },
+  ]
+
+  const { data, errors } = await client.request(`#graphql
+    mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
+      metafieldsSet(metafields: $metafields) {
+        metafields {
+          key
+          namespace
+          value
+          createdAt
+          updatedAt
+        }
+        userErrors {
+          field
+          message
+          code
+        }
+      }
+    }
+`, {
+    variables: {
+      metafields,
+    },
+  })
+
+  if (errors)
+    console.log(errors, errors?.graphQLErrors?.[0].locations)
+
+  // console.log(data)
+
+  return data
+}

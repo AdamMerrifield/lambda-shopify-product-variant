@@ -12,7 +12,7 @@ import type { Variant } from '@shopify/shopify-api/rest/admin/2024-04/variant'
 import { v4 as uuidv4 } from 'uuid'
 import type { CartItemProps, ProductWithMeta } from './src/types'
 import { calcPriceAndName, getVariantByName } from './src/utils'
-import { getAllProductsWithStockMeta, updateAllProductsWithStockMeta } from '~/graphql'
+import { getAllProductsWithStockMeta, updateAllProductsWithStockMeta, updateCustomerMetafield } from '~/graphql'
 import { getPresignedUploadUrlForLogo } from '~/s3-utils'
 
 // setup shopify api
@@ -76,6 +76,16 @@ export async function handler(event: APIGatewayProxyEventV2, _context: Context):
         name,
         url: await getPresignedUploadUrlForLogo(name),
       }
+    }
+    else if (event.rawPath === '/update-customer-logo') {
+      const postData: Record<string, any> = event.body ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('ascii') : event.body) : event.queryStringParameters
+
+      const customerid = postData.cid
+      const logoValue = postData.name
+
+      await updateCustomerMetafield(customerid, logoValue)
+
+      body = { success: true }
     }
   }
   catch (err) {
